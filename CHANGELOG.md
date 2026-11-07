@@ -8,6 +8,8 @@ section after the version, and its text is what the Magisk app shows as the upda
 
 - Request APK certificate collection on affected Android 13 builds, which otherwise return no signing
   information and reject valid downloads with an empty signer in the error. Signing-key checks remain enabled.
+- Read default-app role holders through Android's role service instead of an unavailable shell
+  getter, fixing false activation failures for default apps on Android 13.
 
 ## 0.1.5 (2026-11-07)
 

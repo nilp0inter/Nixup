@@ -363,8 +363,13 @@ object Device {
     fun setOpensLinks(id: String, allowed: Boolean): Boolean =
         run("pm", "set-app-links-allowed", "--user", "0", "--package", id, allowed.toString()).first == 0
 
-    fun roleHolders(role: String): List<String> = run("cmd", "role", "get-role-holders", "--user", "0", role).second
-        .split(';', '\n').map { it.trim() }.filter { PACKAGE_NAME.matches(it) }
+    /** RoleManager reads the root process's user (0); the role shell has no getter on Android 13. */
+    @Suppress("UNCHECKED_CAST")
+    fun roleHolders(role: String): List<String> {
+        val manager = checkNotNull(context?.getSystemService(Context.ROLE_SERVICE)) { "Role service unavailable" }
+        // getRoleHolders is a system API, absent from the public SDK stubs.
+        return manager.javaClass.getMethod("getRoleHolders", String::class.java).invoke(manager, role) as List<String>
+    }
 
     /** Makes [id] the role's holder, or leaves the role with none when [id] is null. */
     fun setRoleHolder(role: String, id: String?): Boolean =
