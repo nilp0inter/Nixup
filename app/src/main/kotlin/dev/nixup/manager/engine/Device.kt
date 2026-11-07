@@ -97,7 +97,11 @@ object Device {
     /** The APK's package, version and keys, or null when it cannot be read here. */
     fun archive(apk: File): Archive? {
         val pm = packageManager ?: return null
-        val info = pm.getPackageArchiveInfo(apk.path, PackageManager.GET_SIGNING_CERTIFICATES) ?: return null
+        // Android 13 can skip certificate collection without GET_SIGNATURES (b/243324820).
+        // Still read SigningInfo below, including its signing-certificate history.
+        @Suppress("DEPRECATION")
+        val flags = PackageManager.GET_SIGNING_CERTIFICATES or PackageManager.GET_SIGNATURES
+        val info = pm.getPackageArchiveInfo(apk.path, flags) ?: return null
         return Archive(info.packageName, info.longVersionCode, info.versionName ?: "", signers(info.signingInfo))
     }
 

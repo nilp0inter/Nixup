@@ -4,6 +4,11 @@ What changed in each release of Nixup. The newest comes first. While a release i
 changes are under "Unreleased": the release build (scripts/build-magisk-release.sh) names that
 section after the version, and its text is what the Magisk app shows as the update's changelog.
 
+## Unreleased
+
+- Request APK certificate collection on affected Android 13 builds, which otherwise return no signing
+  information and reject valid downloads with an empty signer in the error. Signing-key checks remain enabled.
+
 ## 0.1.5 (2026-11-07)
 
 - DAVx⁵'s accounts in the config: `services.davx5` (Nixup's own; NixOS has no DAVx⁵, an Android app). Each build
