@@ -6,12 +6,14 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.graphics.Typeface
+import android.os.Build
 import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.format.DateUtils
 import android.text.style.BackgroundColorSpan
 import android.view.Gravity
 import android.view.View
+import android.view.WindowInsets
 import android.view.inputmethod.InputMethodManager
 import android.widget.ArrayAdapter
 import android.widget.Button
@@ -20,6 +22,7 @@ import android.widget.ListView
 import android.widget.ScrollView
 import android.widget.SearchView
 import android.widget.TextView
+import androidx.annotation.RequiresApi
 import java.text.Normalizer
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -31,6 +34,34 @@ import java.util.Locale
  */
 object Ui {
     fun dp(context: Context, value: Int) = (value * context.resources.displayMetrics.density).toInt()
+
+    /**
+     * Pads [view] clear of the system bars, and of the keyboard when [ime]. WindowInsets.Type arrived with
+     * Android 11; before it, the window's own insets say the same. [consume] keeps them from going further.
+     */
+    fun padForSystemBars(view: View, insets: WindowInsets, pad: Int = 0, ime: Boolean = false, consume: Boolean = false): WindowInsets =
+        if (Build.VERSION.SDK_INT >= 30) Api30.padForSystemBars(view, insets, pad, ime, consume)
+        else {
+            @Suppress("DEPRECATION")
+            view.setPadding(
+                pad + insets.systemWindowInsetLeft,
+                pad + insets.systemWindowInsetTop,
+                pad + insets.systemWindowInsetRight,
+                pad + insets.systemWindowInsetBottom,
+            )
+            insets
+        }
+
+    @RequiresApi(30)
+    private object Api30 {
+        fun padForSystemBars(view: View, insets: WindowInsets, pad: Int, ime: Boolean, consume: Boolean): WindowInsets {
+            var types = WindowInsets.Type.systemBars() or WindowInsets.Type.displayCutout()
+            if (ime) types = types or WindowInsets.Type.ime()
+            val bars = insets.getInsets(types)
+            view.setPadding(pad + bars.left, pad + bars.top, pad + bars.right, pad + bars.bottom)
+            return if (consume) WindowInsets.CONSUMED else insets
+        }
+    }
 
     /** A heading over a part of a list. */
     fun heading(context: Context, text: String) = TextView(context).apply {

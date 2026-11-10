@@ -4,6 +4,13 @@ What changed in each release of Nixup. The newest comes first. While a release i
 changes are under "Unreleased": the release build (scripts/build-magisk-release.sh) names that
 section after the version, and its text is what the Magisk app shows as the update's changelog.
 
+## Unreleased
+
+- Run on Android 9: the module's API gate and the app's minimum are API 28; the window insets and the
+  home-role lookup fall back to the pre-Android-10 APIs, the settings tables are read without the user
+  argument Android 9 ignores, units wait for their program's pid before being called stopped, and saving
+  the Google Play token to Download says it needs Android 10 instead of failing.
+
 ## 0.1.6 (2026-11-08)
 
 - Request APK certificate collection on affected Android 13 builds, which otherwise return no signing

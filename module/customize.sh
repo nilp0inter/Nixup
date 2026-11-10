@@ -2,7 +2,7 @@
 # Nix runnable, installs the app, and starts the phone off with the default profile
 # (which manages nothing). The config is the user's, wherever they keep it: the app's
 # Config picks it, and Nixup makes no folder for it.
-[ "$API" -ge 30 ] || abort "! Needs Android 11 or newer (this phone has API $API)."
+[ "$API" -ge 28 ] || abort "! Needs Android 9 or newer (this phone has API $API)."
 [ "$ARCH" = arm64 ] || abort "! Needs a 64-bit ARM phone (this one is $ARCH): Nix is built for it."
 # What it makes is root's to write (Magisk's own umask is 0; see common.sh).
 umask 022

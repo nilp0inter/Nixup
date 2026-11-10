@@ -21,6 +21,7 @@ import android.os.StatFs
 import android.os.Vibrator
 import android.system.Os
 import android.view.Display
+import androidx.annotation.RequiresApi
 import java.io.File
 
 /**
@@ -364,17 +365,35 @@ object Device {
         run("pm", "set-app-links-allowed", "--user", "0", "--package", id, allowed.toString()).first == 0
 
     /** RoleManager reads the root process's user (0); the role shell has no getter on Android 13. */
-    @Suppress("UNCHECKED_CAST")
     fun roleHolders(role: String): List<String> {
-        val manager = checkNotNull(context?.getSystemService(Context.ROLE_SERVICE)) { "Role service unavailable" }
-        // getRoleHolders is a system API, absent from the public SDK stubs.
-        return manager.javaClass.getMethod("getRoleHolders", String::class.java).invoke(manager, role) as List<String>
+        if (Build.VERSION.SDK_INT < 29) {
+            // Roles arrived with Android 10; before them only the home activity has an equivalent.
+            if (role != "android.app.role.HOME") return emptyList()
+            return run("cmd", "package", "resolve-activity", "--brief", "--user", "0",
+                "-a", "android.intent.action.MAIN", "-c", "android.intent.category.HOME")
+                .second.lineSequence().map { it.trim() }.lastOrNull { it.contains('/') }
+                ?.substringBefore('/')?.let { listOf(it) } ?: emptyList()
+        }
+        return Api29.roleHolders(context, role)
+    }
+
+    @RequiresApi(29)
+    private object Api29 {
+        @Suppress("UNCHECKED_CAST")
+        fun roleHolders(context: Context?, role: String): List<String> {
+            val manager = checkNotNull(context?.getSystemService(Context.ROLE_SERVICE)) { "Role service unavailable" }
+            // getRoleHolders is a system API, absent from the public SDK stubs.
+            return manager.javaClass.getMethod("getRoleHolders", String::class.java).invoke(manager, role) as List<String>
+        }
     }
 
     /** Makes [id] the role's holder, or leaves the role with none when [id] is null. */
-    fun setRoleHolder(role: String, id: String?): Boolean =
-        if (id == null) run("cmd", "role", "clear-role-holders", "--user", "0", role).first == 0
+    fun setRoleHolder(role: String, id: String?): Boolean {
+        // Roles arrived with Android 10; before them Android has only the home activity's setter.
+        if (Build.VERSION.SDK_INT < 29) return false
+        return if (id == null) run("cmd", "role", "clear-role-holders", "--user", "0", role).first == 0
         else run("cmd", "role", "add-role-holder", "--user", "0", role, id).first == 0
+    }
 
     /** The app's services for an intent action, as full component names (package/class). */
     fun services(id: String, action: String): List<String> =
@@ -512,7 +531,10 @@ object Device {
     fun settings(table: String): Map<String, String> {
         val values = LinkedHashMap<String, String>()
         var last: String? = null
-        for (line in run("settings", "--user", "0", "list", table).second.lineSequence()) {
+        val listed = run("settings", "--user", "0", "list", table).second
+        // Before Android 11 `settings --user 0 list` lists nothing: the user is taken by get, put and delete alone.
+        val output = if (listed.lineSequence().any { SETTING_LINE.matches(it) }) listed else run("settings", "list", table).second
+        for (line in output.lineSequence()) {
             val setting = SETTING_LINE.matchEntire(line)
             if (setting != null) {
                 last = setting.groupValues[1]

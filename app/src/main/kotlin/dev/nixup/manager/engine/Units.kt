@@ -603,6 +603,9 @@ class Units(private val data: File) {
                 File(unitDir, "run.conf").writeText(runConf(unit, unitDir))
                 File(unitDir, "ready").delete()
                 File(unitDir, "unready").delete()
+                // A loop that was killed leaves its program's pid here: a new one must not be taken for it.
+                File(unitDir, "main.pid").delete()
+                File(unitDir, "listening").delete()
                 if (!background.isFile) writeView()
                 // Below the apps on the screen (see BACKGROUND), its loop and so all it starts.
                 ProcessBuilder(
@@ -627,6 +630,10 @@ class Units(private val data: File) {
             if (notifies(unit)) Notify.event("service", "error", "$name did not start", "It did not say it was ready", "service:$name", quiet = quietFailures)
             return false
         }
+        // The view is made on the phone's storage, which takes a moment (a slow eMMC): wait for its program's pid,
+        // not just its loop's, before deciding it is not there.
+        val startUntil = System.currentTimeMillis() + 1000L * timeout(unit, "timeoutStart", 90).coerceAtMost(120)
+        while (System.currentTimeMillis() < startUntil && supervisorPid(name) != null && pid(File(unitDir, "main.pid")) == null) Thread.sleep(250)
         Thread.sleep(1500)
         // One started at its first connection: until its sockets are open and waiting.
         if (unit.optBoolean("lazy")) {
@@ -1320,8 +1327,16 @@ class Units(private val data: File) {
         return type.first == 0 && type.second.trim().let { it.isNotEmpty() && it != "tmpfs" }
     }
 
-    /** Its loop's process, while it runs. */
-    private fun supervisorPid(name: String): Int? = pid(File(dir, "$name/supervisor.pid"))?.takeIf { cmdline(it).contains(MARK + name) }
+    /**
+     * Its loop's process, while it runs: its working folder is the unit's, which /proc keeps no matter how long
+     * the loop's script is (Android 9's cmdline stops at 4 KiB, before the mark its arguments carry).
+     */
+    private fun supervisorPid(name: String): Int? {
+        val folder = File(dir, name)
+        return pid(File(folder, "supervisor.pid"))?.takeIf { alive(it) && cwd(it) == folder.canonicalPath }
+    }
+
+    private fun cwd(pid: Int) = runCatching { File("/proc/$pid/cwd").canonicalPath }.getOrNull()
 
     private fun pid(file: File): Int? = runCatching { file.readText().trim().toInt() }.getOrNull()
 

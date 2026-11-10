@@ -9,7 +9,6 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.view.View
-import android.view.WindowInsets
 import android.window.OnBackInvokedDispatcher
 import android.webkit.CookieManager
 import android.webkit.WebChromeClient
@@ -92,9 +91,7 @@ class GoogleSignInActivity : Activity() {
             addView(progress, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT))
             // Drawn edge to edge: the page keeps clear of the bars (and of the keyboard, for its fields).
             setOnApplyWindowInsetsListener { view, insets ->
-                val bars = insets.getInsets(WindowInsets.Type.systemBars() or WindowInsets.Type.ime() or WindowInsets.Type.displayCutout())
-                view.setPadding(bars.left, bars.top, bars.right, bars.bottom)
-                WindowInsets.CONSUMED
+                Ui.padForSystemBars(view, insets, ime = true, consume = true)
             }
         }
         setContentView(root)

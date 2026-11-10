@@ -16,7 +16,6 @@ import android.util.TypedValue
 import android.view.Gravity
 import android.view.KeyEvent
 import android.view.MotionEvent
-import android.view.WindowInsets
 import android.view.inputmethod.InputMethodManager
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -28,6 +27,7 @@ import com.termux.view.TerminalView
 import com.termux.view.TerminalViewClient
 import dev.nixup.manager.R
 import dev.nixup.manager.Root
+import dev.nixup.manager.Ui
 import org.json.JSONObject
 import java.io.File
 import java.util.Properties
@@ -62,9 +62,7 @@ class TerminalActivity : Activity(), ServiceConnection {
         view.setTextSize(prefs.getInt(TEXT_SIZE, defaultTextSize()))
         addKeys(findViewById(R.id.terminal_keys))
         findViewById<LinearLayout>(R.id.terminal_root).setOnApplyWindowInsetsListener { root, insets ->
-            val bars = insets.getInsets(WindowInsets.Type.systemBars() or WindowInsets.Type.ime() or WindowInsets.Type.displayCutout())
-            root.setPadding(bars.left, bars.top, bars.right, bars.bottom)
-            WindowInsets.CONSUMED
+            Ui.padForSystemBars(root, insets, ime = true, consume = true)
         }
     }
 

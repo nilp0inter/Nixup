@@ -11,7 +11,7 @@ android {
     ndkVersion = "28.2.13676358"
 
     defaultConfig {
-        minSdk = 30
+        minSdk = 28
         externalNativeBuild {
             ndkBuild {
                 cFlags += listOf("-std=c11", "-Wall", "-Wextra", "-Os", "-fno-stack-protector", "-Wl,--gc-sections")

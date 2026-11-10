@@ -1,0 +1,4 @@
+<resources>
+    <!-- DayNight platform themes arrived with Android 10; before it, the plain device theme. -->
+    <style name="Theme.Nixup" parent="@android:style/Theme.DeviceDefault" />
+</resources>

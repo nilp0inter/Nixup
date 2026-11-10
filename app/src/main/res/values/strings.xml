@@ -327,4 +327,5 @@
     <string name="play_token_copied">Token copied</string>
     <string name="play_token_unreadable">The token could not be read: %1$s</string>
     <string name="play_token_not_saved">The token could not be saved: %1$s</string>
+    <string name="play_token_save_android_9">Saving the token to Download needs Android 10 or newer: copy it instead.</string>
 </resources>

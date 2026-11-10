@@ -153,7 +153,7 @@ More, with every option: [the documentation](https://by-architect.github.io/Nixu
 ## Requirements
 
 - A rooted phone: Magisk (tested), KernelSU or APatch.
-- Android 11 or newer, 64-bit ARM (arm64).
+- Android 9 or newer, 64-bit ARM (arm64).
 
 ## Install
 

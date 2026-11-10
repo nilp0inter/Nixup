@@ -21,7 +21,6 @@ import android.provider.MediaStore
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.view.WindowInsets
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.CheckBox
@@ -736,6 +735,10 @@ class MainActivity : Activity() {
 
     /** The token in Download/google-play.token (Android numbers the name when one is there already). */
     private fun savePlayToken(token: String) {
+        if (Build.VERSION.SDK_INT < 29) {
+            toast(getString(R.string.play_token_save_android_9))
+            return
+        }
         runner.background {
             val saved = try {
                 val values = ContentValues().apply {
@@ -896,11 +899,7 @@ class MainActivity : Activity() {
     /** The app draws behind the status and navigation bars (edge to edge), so its content keeps clear of them. */
     private fun padForSystemBars(root: View) {
         val pad = root.paddingLeft
-        root.setOnApplyWindowInsetsListener { view, insets ->
-            val bars = insets.getInsets(WindowInsets.Type.systemBars() or WindowInsets.Type.displayCutout())
-            view.setPadding(pad + bars.left, pad + bars.top, pad + bars.right, pad + bars.bottom)
-            insets
-        }
+        root.setOnApplyWindowInsetsListener { view, insets -> Ui.padForSystemBars(view, insets, pad) }
     }
 
     companion object {
